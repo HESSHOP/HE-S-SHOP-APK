@@ -38,18 +38,25 @@ jobs:
           package com.hesstore.app;
 
           import android.app.AlertDialog;
+          import android.app.Dialog;
           import android.app.DownloadManager;
           import android.content.DialogInterface;
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.ColorDrawable;
+          import android.graphics.drawable.GradientDrawable;
           import android.net.Uri;
           import android.os.Bundle;
           import android.os.Environment;
           import android.os.Message;
           import android.view.Gravity;
+          import android.util.TypedValue;
           import android.view.View;
           import android.view.ViewGroup;
+          import android.view.Window;
+          import android.view.WindowManager;
           import android.webkit.CookieManager;
           import android.webkit.DownloadListener;
           import android.webkit.URLUtil;
@@ -58,7 +65,9 @@ jobs:
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import android.widget.Button;
           import android.widget.FrameLayout;
+          import android.widget.LinearLayout;
           import android.widget.TextView;
           import android.widget.Toast;
           import androidx.activity.OnBackPressedCallback;
@@ -127,25 +136,75 @@ jobs:
               showFollowGate();
             }
 
-            /* Premier lancement : message bloquant, il disparait seulement apres un clic sur le bouton */
+            private int dp(int v) {
+              return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
+            }
+
+            /* Premier lancement : fenetre style "mise a jour", bloquante, elle disparait seulement apres un clic sur le bouton */
             private void showFollowGate() {
               final SharedPreferences sp = getSharedPreferences("hes_prefs", MODE_PRIVATE);
               if (sp.getBoolean("wa_follow", false)) {
                 return;
               }
-              AlertDialog dlg = new AlertDialog.Builder(this)
-                .setTitle("Abonne-toi \u00e0 la cha\u00eene WhatsApp")
-                .setMessage("Avant de continuer, abonne-toi \u00e0 notre cha\u00eene WhatsApp. Appuie sur le bouton ci-dessous pour continuer.")
-                .setCancelable(false)
-                .setPositiveButton("S\u2019abonner", new DialogInterface.OnClickListener() {
-                  @Override
-                  public void onClick(DialogInterface dialog, int which) {
-                    sp.edit().putBoolean("wa_follow", true).apply();
-                    openExternal(CHANNEL_URL);
-                  }
-                })
-                .create();
+              final Dialog dlg = new Dialog(this);
+              dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+              dlg.setCancelable(false);
               dlg.setCanceledOnTouchOutside(false);
+
+              LinearLayout card = new LinearLayout(this);
+              card.setOrientation(LinearLayout.VERTICAL);
+              card.setGravity(Gravity.CENTER_HORIZONTAL);
+              card.setPadding(dp(24), dp(34), dp(24), dp(28));
+              GradientDrawable cardBg = new GradientDrawable();
+              cardBg.setColor(Color.WHITE);
+              cardBg.setCornerRadius(dp(30));
+              card.setBackground(cardBg);
+
+              TextView title = new TextView(this);
+              title.setText("Abonne-toi \u00e0 la cha\u00eene !");
+              title.setTextColor(Color.BLACK);
+              title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+              title.setTypeface(Typeface.DEFAULT_BOLD);
+              title.setGravity(Gravity.CENTER);
+              card.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+              TextView msg = new TextView(this);
+              msg.setText("Rejoins notre cha\u00eene WhatsApp pour ne rien rater : nouveaut\u00e9s, mises \u00e0 jour et nouveaux fichiers. Appuie sur le bouton ci-dessous pour continuer ! \uD83D\uDC47");
+              msg.setTextColor(0xFF444444);
+              msg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+              msg.setGravity(Gravity.CENTER);
+              msg.setLineSpacing(0f, 1.2f);
+              LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+              mp.setMargins(0, dp(14), 0, dp(26));
+              card.addView(msg, mp);
+
+              Button btn = new Button(this);
+              btn.setText("S\u2019abonner maintenant");
+              btn.setAllCaps(false);
+              btn.setTextColor(Color.WHITE);
+              btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+              btn.setTypeface(Typeface.DEFAULT_BOLD);
+              GradientDrawable btnBg = new GradientDrawable();
+              btnBg.setColor(0xFF1976D2);
+              btnBg.setCornerRadius(dp(32));
+              btn.setBackground(btnBg);
+              btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                  sp.edit().putBoolean("wa_follow", true).apply();
+                  openExternal(CHANNEL_URL);
+                  dlg.dismiss();
+                }
+              });
+              card.addView(btn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60)));
+
+              dlg.setContentView(card);
+              Window w = dlg.getWindow();
+              if (w != null) {
+                w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                w.setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9f), WindowManager.LayoutParams.WRAP_CONTENT);
+                w.setDimAmount(0.7f);
+              }
               dlg.show();
             }
 
