@@ -182,21 +182,23 @@ jobs:
               btn.setText("S\u2019abonner maintenant");
               btn.setAllCaps(false);
               btn.setTextColor(Color.WHITE);
-              btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+              btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
               btn.setTypeface(Typeface.DEFAULT_BOLD);
               GradientDrawable btnBg = new GradientDrawable();
               btnBg.setColor(0xFF1976D2);
-              btnBg.setCornerRadius(dp(32));
+              btnBg.setCornerRadius(dp(25));
               btn.setBackground(btnBg);
               btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                   sp.edit().putBoolean("wa_follow", true).apply();
-                  openExternal(CHANNEL_URL);
+                  openChannel();
                   dlg.dismiss();
                 }
               });
-              card.addView(btn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60)));
+              LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
+          bp.setMargins(dp(16), 0, dp(16), 0);
+          card.addView(btn, bp);
 
               dlg.setContentView(card);
               Window w = dlg.getWindow();
@@ -286,7 +288,22 @@ jobs:
                 .show();
             }
 
-            void openExternal(String url) {
+            void openChannel() {
+            String[] pkgs = {"com.whatsapp", "com.whatsapp.w4b"};
+            for (String pkg : pkgs) {
+              try {
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(CHANNEL_URL));
+                i.setPackage(pkg);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+                return;
+              } catch (Exception e) {
+              }
+            }
+            openExternal(CHANNEL_URL);
+          }
+
+          void openExternal(String url) {
               try {
                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
